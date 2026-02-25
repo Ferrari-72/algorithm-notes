@@ -1,147 +1,44 @@
-# 🔍 2026-02-25: Find the Duplicate Number - Binary Search
+# Difference Between Two Approaches to Binary Search
 
-## 📋 Problem Description
-Given a sorted array `A = [a₀, a₁, ..., aₙ]` including all the integers in the range `{0, 1, 2, ..., n-1}` exactly once, except for one of them which appears **twice**. 
+Binary search is a powerful algorithm for finding an element's position in a sorted array. However, there are usually multiple ways to implement it. In this document, we will illustrate two common approaches, explaining each step in beginner-friendly language.
 
-**Task**: Design a divide and conquer algorithm to find the only repeated element.
+## Approach 1: Iterative Binary Search
 
-## 📥 Input
-- A single line containing n integers, representing a sorted array `[a₀, a₁, ..., aₙ₋₁]`
-- The array contains all integers from 0 to n-2 exactly once, except that one of them appears twice
-- Array length is n, and all values are in the range [0, n-2]
+### Steps:
+1. **Initialization**: Start with two pointers: `low` (the beginning of the array) and `high` (the end of the array).
+2. **Calculate Middle**: Find the middle index by using the formula `(low + high) / 2`.
+   - If the middle element equals the target, you found the target!
+3. **Compare and Adjust**:
+   - If the middle element is less than the target, move the `low` pointer to `middle + 1`.
+   - If the middle element is greater than the target, move the `high` pointer to `middle - 1`.
+4. **Repeat**: Continue the process until `low` exceeds `high`. If you reach this point without finding the target, it’s not in the array.
 
-## 📤 Output
-Output a single integer — the only repeated element in the array.
+### Example:
+- **Array**: [1, 2, 3, 4, 5]
+- **Target**: 3
+- Start: low = 0, high = 4, middle = 2 (element is 3, target found!)
 
-## 🧪 Sample Test Cases
+## Approach 2: Recursive Binary Search
 
-### Sample Input 1
-```
-[0,1,1,2,3,4]
-```
-**Sample Output 1**: `1`
+### Steps:
+1. **Base Case**: Check if `low` is greater than `high`. If it is, return an indicator that the target is not found.
+2. **Calculate Middle**: Similar to the iterative approach, find the middle index.
+3. **Compare**:
+   - If the middle element matches the target, return its index.
+4. **Recursion**:
+   - If the middle element is less than the target, call the function recursively with `low = middle + 1`.
+   - If the middle element is greater, call the function recursively with `high = middle - 1`.
 
-### Sample Input 2
-```
-[0,1,2,2]
-```
-**Sample Output 2**: `2`
+### Example:
+- **Array**: [1, 2, 3, 4, 5]
+- **Target**: 3
+- Start: low = 0, high = 4, middle = 2 (element is 3, target found!)
 
-### Sample Input 3
-```
-[0,1,2,3,3,4]
-```
-**Sample Output 3**: `3`
+## Summary of Differences
+- **Control Flow**: 
+  - **Iterative**: Uses a loop and modifies `low` and `high` directly.
+  - **Recursive**: Calls itself to break the problem down into smaller problems.
+- **Efficiency**:
+  - Both approaches are efficient and run in O(log n) time, but iterative may be more memory-efficient because it does not involve the overhead of recursive calls.
 
-## ❌ My Incorrect Code (Caused Infinite Loop)
-```python
-def findDuplicate(arr):
-    left = 0
-    right = len(arr) - 1
-    
-    while left <= right:
-        mid = (left + right) // 2
-        
-        if arr[mid] == mid:
-            left = mid  # ⚠️ FATAL ERROR: left doesn't move forward!
-        else:
-            right = mid  # ⚠️ FATAL ERROR: right doesn't move backward!
-```
-
-### 🔴 Why This Causes Infinite Loop?
-When `left` and `right` are adjacent (e.g., 2 and 3):
-- `mid` becomes 2
-- If the condition is true, `left = mid` means `left` stays at 2
-- If the condition is false, `right = mid` means `right` stays at 2
-- The search range **never shrinks** → **Infinite Loop** 🔁
-
-## ✅ Correct Solution
-
-### 💡 Key Insight
-In a sorted array containing 0 to n-2 (with one duplicate):
-- At index `i`, the expected value should be `i`
-- If `arr[i] > i`: duplicate is at or after index `i` → move `left` forward
-- If `arr[i] == i`: keep searching or found it
-- If `arr[i] < i`: duplicate is before index `i` → move `right` backward
-
-### Solution: Binary Search with Proper Boundary Movement
-```python
-def findDuplicate(arr):
-    left = 0
-    right = len(arr) - 1
-    
-    while left <= right:
-        mid = (left + right) // 2
-        count = 0
-        
-        # Count how many elements are <= mid
-        for num in arr:
-            if num <= mid:
-                count += 1
-        
-        # If count > mid + 1, duplicate is in [0, mid]
-        if count > mid + 1:
-            right = mid - 1  # ✅ Move right backward
-        else:
-            left = mid + 1   # ✅ Move left forward
-    
-    return left
-```
-
-### Alternative: Direct Comparison Approach
-```python
-def findDuplicate(arr):
-    left = 0
-    right = len(arr) - 1
-    
-    while left < right:
-        mid = (left + right) // 2
-        
-        if arr[mid] > mid:
-            # Duplicate is to the right (values shifted)
-            left = mid + 1  # ✅ Guaranteed to move
-        else:
-            # Duplicate is to the left
-            right = mid     # ✅ Still makes progress
-    
-    return arr[left]
-```
-
-## 💼 Complete Test Implementation
-```python
-def findDuplicate(arr):
-    """Find the duplicate number in sorted array using binary search."""
-    left = 0
-    right = len(arr) - 1
-    
-    while left < right:
-        mid = (left + right) // 2
-        
-        if arr[mid] > mid:
-            left = mid + 1
-        else:
-            right = mid
-    
-    return arr[left]
-
-
-# Test Cases
-print(findDuplicate([0,1,1,2,3,4]))   # Output: 1 ✓
-print(findDuplicate([0,1,2,2]))       # Output: 2 ✓
-print(findDuplicate([0,1,2,3,3,4]))   # Output: 3 ✓
-```
-
-## ⚠️ Binary Search Common Pitfalls
-| Pitfall | Issue | Fix |
-|---------|-------|-----|
-| `left = mid` instead of `left = mid + 1` | Infinite loop when adjacent | Always use `+1` or `-1` |
-| `right = mid` instead of `right = mid - 1` | Infinite loop when adjacent | Use `-1` for upper bound |
-| Using `<=` with improper boundaries | May skip elements | Be careful with loop condition |
-| Integer overflow | `mid = (left + right) // 2` fails | Use `mid = left + (right - left) // 2` |
-
-## 🎯 Time & Space Complexity
-- **Time**: O(n log n) - binary search with linear counting
-- **Space**: O(1) - only using pointers
-
----
-**Date**: 2026-02-25 | **Topic**: Binary Search + Divide & Conquer | **Difficulty**: ⭐⭐ Medium
+By understanding both methods, you can choose the one that best suits your coding style or specific use case!
