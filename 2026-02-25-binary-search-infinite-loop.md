@@ -1,208 +1,48 @@
-# 🔍 2026-02-25: Find the Duplicate Number - Binary Search Explained Simply
+# Binary Search Infinite Loop - Scenarios
 
-## 📋 Problem Description
-Given a sorted array `[a₀, a₁, ..., aₙ]` with all integers from 0 to n-2 appearing exactly once, **except one number appears twice**. Find that duplicate number.
+## Introduction
+In binary search algorithms, infinite loops can arise from various implementation details. This document explores two scenarios: Scenario A with a sorted array using the index-mapping method and Scenario B with an unsorted array using the counting method.
 
-### Examples:
-- Input: `[0,1,1,2,3,4]` → Output: `1`
-- Input: `[0,1,2,2]` → Output: `2`
-- Input: `[0,1,2,3,3,4]` → Output: `3`
+## Scenario A: Sorted Array with Index-Mapping Method (O(log n))
+In a sorted array, binary search can be efficiently implemented using an index-mapping method. The algorithm divides the search space in half at each step.
 
----
-
-## ❌ 我的错误代码为什么会无限循环？
-
+### Implementation
 ```python
-left = 0
-right = len(arr) - 1
-
-while left <= right:
-    mid = (left + right) // 2
-    
-    if arr[mid] == mid:
-        left = mid  # ⚠️ 这是问题所在！
-    else:
-        right = mid  # ⚠️ 这也是问题所在！
-```
-
-### 🔴 具体发生了什么？
-
-想象 left = 2，right = 3 的情况：
-
-```
-循环1：
-  mid = (2 + 3) // 2 = 2
-  如果条件成立：left = 2 ← left 还是2，没有移动！
-  
-循环2：
-  mid = (2 + 3) // 2 = 2 ← 又是2！
-  如果条件成立：left = 2 ← 还是没动！
-  
-循环3... 永远重复 🔁🔁🔁
-```
-
-**为什么？**因为 `left = mid` 和 `right = mid` 没有让搜索范围缩小！
-
----
-
-## ✅ 方案1：计数法（推荐新手理解）
-
-### 💡 核心思想
-
-在这个问题中，数字应该和索引一一对应：
-
-```
-正常情况：
-索引：  [0, 1, 2, 3, 4, 5]
-数值：  [0, 1, 2, 3, 4, 5]  ✓ 完美对应
-
-但有重复时：
-索引：  [0, 1, 2, 3, 4, 5]
-数值：  [0, 1, 1, 2, 3, 4]  ← 1出现了两次，5被"挤出来"了！
-```
-
-**关键问题**：有多少个数字 ≤ mid？
-
-- 如果这个数量 **多于** `mid + 1` 个，说明有数字被"挤出来"了
-- 那重复的数字就在 **左半部分** [0, mid]
-- 否则重复的在 **右半部分** [mid+1, n-1]
-
-### ✅ 正确代码
-
-```python
-def findDuplicate(arr):
-    left = 0
-    right = len(arr) - 1
-    
+def binary_search_sorted(arr, target):
+    left, right = 0, len(arr) - 1
     while left <= right:
-        mid = (left + right) // 2
-        
-        # 第1步：数一数有多少个数字 ≤ mid
-        count = 0
-        for num in arr:
-            if num <= mid:
-                count += 1
-        
-        # 第2步：判断重复在哪一边
-        if count > mid + 1:
-            # 数字被挤出来了，重复在左边
-            right = mid - 1  # ✅ right 向左移动，范围缩小！
-        else:
-            # 重复在右边
-            left = mid + 1   # ✅ left 向右移动，范围缩小！
-    
-    return left
-```
-
-### 🔍 具体走一遍例子
-
-```
-数组：[0,1,1,2,3,4]  （重复的是1）
-
-第1次循环：left=0, right=5
-  mid = (0 + 5) // 2 = 2
-  数一数 ≤ 2 的数字：0, 1, 1, 2 = 4个
-  4 > (2 + 1)? 是的，4 > 3
-  所以重复在左边 → right = 1
-  范围现在是 [0, 1]
-
-第2次循环：left=0, right=1
-  mid = (0 + 1) // 2 = 0
-  数一数 ≤ 0 的数字：0 = 1个
-  1 > (0 + 1)? 不，1 = 1
-  所以重复在右边 → left = 1
-  范围现在是 [1, 1]
-
-第3次循环：left=1, right=1
-  mid = (1 + 1) // 2 = 1
-  数一数 ≤ 1 的数字：0, 1, 1 = 3个
-  3 > (1 + 1)? 是的，3 > 2
-  所以重复在左边 → right = 0
-  现在 left > right，停止循环
-
-返回 left = 1 ✓ 正确！
-```
-
----
-
-## 🆚 方案对比表
-
-| 对比项 | 原错误代码 | 正确方案（计数法）|
-|------|---------|-------------|
-| `left` 更新 | `left = mid` (不动) | `left = mid + 1` (确保前进) |
-| `right` 更新 | `right = mid` (不动) | `right = mid - 1` (确保后退) |
-| 结果 | 🔁 无限循环 | ✅ 正确找到答案 |
-| 范围缩小吗? | ❌ 不缩小 | ✅ 每次都缩小 |
-
----
-
-## 🎯 核心要点（记住这个！）
-
-### ⚠️ 二分查找的黄金法则：
-**每一次循环，搜索范围必须缩小！**
-
-```
-❌ 错误：         ✅ 正确：
-left = mid   →   left = mid + 1  (至少前进1步)
-right = mid  →   right = mid - 1 (至少后退1步)
-```
-
-如果你不确定，记住：
-- 更新左边界时，用 `left = mid + 1`
-- 更新右边界时，用 `right = mid - 1`
-
----
-
-## 🧪 完整测试代码
-
-```python
-def findDuplicate(arr):
-    left = 0
-    right = len(arr) - 1
-    
-    while left <= right:
-        mid = (left + right) // 2
-        count = sum(1 for num in arr if num <= mid)
-        
-        if count > mid + 1:
-            right = mid - 1
-        else:
+        mid = left + (right - left) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
             left = mid + 1
-    
-    return left
-
-
-# 测试用例
-Test cases have been defined below:
-test_cases = [
-    [0, 1, 1, 2, 3, 4],    # 期望: 1
-    [0, 1, 2, 2],          # 期望: 2
-    [0, 1, 2, 3, 3, 4],    # 期望: 3
-]
-
-for arr in test_cases:
-    result = findDuplicate(arr)
-    print(f"输入: {arr} → 输出: {result}")
+        else:
+            right = mid - 1
+    return -1
 ```
 
-**输出**：
+## Scenario B: Unsorted Array with Counting Method (O(n log n), LeetCode 287)
+In this scenario, we sort the array first, then apply the binary search. This method may lead to higher time complexity due to initial sorting.
+
+### Implementation
+```python
+def find_duplicate(nums):
+    nums.sort()
+    for i in range(1, len(nums)):
+        if nums[i] == nums[i - 1]:
+            return nums[i]
+    return -1
 ```
-输入: [0, 1, 1, 2, 3, 4] → 输出: 1 ✓
-输入: [0, 1, 2, 2] → 输出: 2 ✓
-输入: [0, 1, 2, 3, 3, 4] → 输出: 3 ✓
-```
 
----
+## Comparison Table
 
-## 🚫 其他常见的二分查找错误
+| Method        | Time Complexity | Use Case                       |
+|---------------|----------------|--------------------------------|
+| Index Mapping | O(log n)       | Sorted arrays                  |
+| Counting      | O(n log n)    | Unsorted arrays                |
 
-| 错误类型 | 错误代码 | 后果 | 修正 |
-|---------|---------|------|------|
-| 没有移动指针 | `left = mid` | 无限循环 | `left = mid + 1` |
-| 没有移动指针 | `right = mid` | 无限循环 | `right = mid - 1` |
-| 越界 | `mid = (left + right) // 2` 溢出 | 内存错误 | `mid = left + (right - left) // 2` |
-| 边界条件 | `while left < right` (遗漏mid) | 漏掉答案 | `while left <= right` |
+## Why the Original Code Had an Infinite Loop
+The infinite loop often occurs when the bounds of the search do not converge. This may happen if the mid-point calculation is incorrect or if the conditions to update the search boundaries (left and right) are not properly implemented.
 
----
-
-**Date**: 2026-02-25 | **Topic**: Binary Search Debugging | **Difficulty**: ⭐⭐ Medium | **Understanding Level**: Beginner-Friendly
+## Conclusion
+Choose the index-mapping method for sorted arrays to ensure efficiency. The counting method serves well for scenarios requiring flexibility with unsorted data but may require more resources.
