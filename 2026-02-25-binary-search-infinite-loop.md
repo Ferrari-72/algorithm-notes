@@ -76,6 +76,62 @@ def find_duplicate_correct(nums):
 
 ---
 
+## ❌ Mistake 3: Using `right = mid - 1` in `while left < right` Template
+**The Error**: When using the `while left < right` template, I mistakenly used `right = mid - 1` instead of `right = mid`, causing the algorithm to miss the answer in some cases (especially when the duplicate appears near the end of the array).
+
+### ❌ My Wrong Code
+```python
+while left < right:
+    mid = (left + right) // 2
+    
+    if arr[mid] < mid:
+        right = mid - 1  # ⚠️ FATAL ERROR: Should be right = mid
+    else:
+        left = mid + 1
+```
+
+**Why it failed:**
+The `while left < right` template has a **core principle**: **the search interval must always contain the answer**.
+
+- When `arr[mid] < mid`, it means a misalignment has occurred. The duplicate number might be `arr[mid]` itself, or to its left.
+- If we write `right = mid - 1`, we **exclude the `mid` position** from the search range!
+- **What if `mid` is exactly the second occurrence of the duplicate number?** We would miss it!
+
+**Example Failure Case:**
+Consider `[0, 1, 2, 2]`:
+- Initial: `left=0, right=3`
+- `mid=1, arr[1]=1, 1 < 1? No` → `left=2`
+- `mid=2, arr[2]=2, 2 < 2? No` → `left=3`
+- Final: `left=3, arr[3]=2` ✓ (This works by luck)
+
+But consider `[0, 1, 1, 2, 3, 4]` with wrong code:
+- Initial: `left=0, right=5`
+- `mid=2, arr[2]=1, 1 < 2? Yes` → `right=1` (WRONG: should be `right=2`)
+- `mid=0, arr[0]=0, 0 < 0? No` → `left=1`
+- `mid=1, arr[1]=1, 1 < 1? No` → `left=2`
+- Final: `left=2, arr[2]=1` ✓ (Works by luck, but the logic is wrong)
+
+**The real problem**: If the duplicate is at position `mid` and we do `right = mid - 1`, we skip it!
+
+### ✅ The Fix
+In the `while left < right` template, **when you cannot be sure if `mid` is the answer, you must retain `mid`**:
+
+```python
+while left < right:
+    mid = (left + right) // 2
+    
+    if arr[mid] < mid:
+        right = mid  # ✅ CORRECT: Keep mid in search range
+    else:
+        left = mid + 1  # Safe to exclude mid since arr[mid] == mid
+```
+
+**Key Rule:**
+- **`while left < right` template**: Search interval always contains answer → use `right = mid` when `mid` might be answer
+- **`while left <= right` template**: Can exclude `mid` → use `right = mid - 1` safely
+
+---
+
 ## ⚔️ Comparison: When to Use Which?
 
 | Feature | Index-Mapping (Scenario A) | Counting Method (Scenario B) |
@@ -89,9 +145,12 @@ def find_duplicate_correct(nums):
 ---
 
 ## 💡 Key Takeaways
-1. **Infinite Loop Prevention**: Always update pointers as `mid + 1` or `mid - 1`. Never use `mid` directly.
-2. **Don't Sort Blindly**: For "Find Duplicate" in unsorted arrays, check constraints first. If "read-only", use Counting Method, NOT sorting.
-3. **Understand the Trade-off**: The Counting Method is slower ( $O(n \log n)$ ) because it trades time for space ( $O(1)$ ) and immutability.
+1. **Infinite Loop Prevention**: Always update pointers as `mid + 1` or `mid - 1`. Never use `mid` directly (in `while left <= right` template).
+2. **Template-Specific Rules**: 
+   - **`while left < right`**: Search interval must always contain answer → use `right = mid` (not `mid - 1`) when `mid` might be answer
+   - **`while left <= right`**: Can safely exclude `mid` → use `right = mid - 1`
+3. **Don't Sort Blindly**: For "Find Duplicate" in unsorted arrays, check constraints first. If "read-only", use Counting Method, NOT sorting.
+4. **Understand the Trade-off**: The Counting Method is slower ( $O(n \log n)$ ) because it trades time for space ( $O(1)$ ) and immutability.
 
 ---
 
@@ -203,6 +262,10 @@ Final: left=2, arr[2]=1 ✓
 ```
 
 **Important Notes:**
-1. **Boundary Updates**: Notice we use `right = mid` (not `mid - 1`) because we want to include `mid` in the search range when `arr[mid] < mid`
+1. **Boundary Updates**: Notice we use `right = mid` (not `mid - 1`) because:
+   - We're using `while left < right` template, which requires the search interval to always contain the answer
+   - When `arr[mid] < mid`, the duplicate might be at position `mid` itself (the second occurrence)
+   - Using `right = mid - 1` would exclude `mid` and potentially miss the answer
 2. **Loop Condition**: We use `left < right` (not `<=`) because when `left == right`, we've found the answer
 3. **No Infinite Loop**: Since we always update `left = mid + 1` or `right = mid`, and `mid < right` when `left < right`, the range always shrinks
+4. **Template Choice**: This is a critical distinction between `while left < right` and `while left <= right` templates - always match your boundary updates to your template!
