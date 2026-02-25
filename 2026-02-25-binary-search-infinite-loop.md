@@ -130,28 +130,44 @@ When there's a duplicate:
 **Algorithm**: Binary search for the first position where `arr[i] < i`. The duplicate is at that position.
 
 ```python
-def find_duplicate_sorted(arr):
-    """
-    Find the duplicate element in a sorted array using binary search.
-    Time Complexity: O(log n)
-    Space Complexity: O(1)
+import sys
+
+def find_duplicate():
+    # 1. 读取输入
+    # sys.stdin.read() 读取所有输入内容
+    # .split() 按空格分割成字符串列表
+    input_data = sys.stdin.read().split()
     
-    Key: Find first position where arr[i] < i
-    """
+    if not input_data:
+        return
+
+    # 将字符串列表转换为整数列表
+    # 例如：输入 "0 1 2 2 3" -> arr = [0, 1, 2, 2, 3]
+    arr = [int(x) for x in input_data]
+    
+    # 2. 核心算法：二分查找 (Divide and Conquer)
     left, right = 0, len(arr) - 1
     
+    # 使用 left < right 模板，寻找第一个 arr[i] < i 的位置
     while left < right:
         mid = (left + right) // 2
         
-        # If arr[mid] < mid, duplicate is at or before mid
-        # If arr[mid] == mid, duplicate is after mid
+        # 如果 arr[mid] < mid，说明错位发生在 mid 或 mid 左边
+        # 重复的数字就在左半部分（包含 mid）
         if arr[mid] < mid:
-            right = mid  # Search in [left, mid]
+            right = mid
+        # 如果 arr[mid] == mid，说明左边都是正常的
+        # 重复的数字在右半部分
         else:
-            left = mid + 1  # Search in [mid+1, right]
+            left = mid + 1
     
-    # left points to the duplicate element
-    return arr[left]
+    # 3. 输出结果
+    # 循环结束时 left == right，这个位置就是重复数字第一次导致错位的地方
+    # 对应的值 arr[left] 就是我们要找的重复数字
+    print(arr[left])
+
+if __name__ == "__main__":
+    find_duplicate()
 ```
 
 **Why This Works:**
@@ -168,12 +184,22 @@ Initial: left=0, right=5
 Final: left=2, arr[2]=1 ✓
 ```
 
-**Test Cases:**
+**Usage Example:**
+```bash
+# Input: 0 1 1 2 3 4
+# Output: 1
+
+# Input: 0 1 2 2
+# Output: 2
+
+# Input: 0 1 2 3 3 4
+# Output: 3
+```
+
+**Test with Python:**
 ```python
-# Test
-assert find_duplicate_sorted([0, 1, 1, 2, 3, 4]) == 1
-assert find_duplicate_sorted([0, 1, 2, 2]) == 2
-assert find_duplicate_sorted([0, 1, 2, 3, 3, 4]) == 3
+# 可以通过重定向输入测试
+# echo "0 1 1 2 3 4" | python find_duplicate.py
 ```
 
 **Important Notes:**
